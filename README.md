@@ -49,7 +49,7 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 
 2. **Define File Paths**:
     ```python
-    base_path = "/mnt/<container_name>/contact-center-analytics/"
+    base_path = "/abfss:/<container_name>/contact-center-analytics/"
     interactions_path = base_path + "interactions.csv"
     agents_path = base_path + "agents.csv"
     supervisors_path = base_path + "supervisors.csv"
@@ -57,19 +57,18 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     interactions_parquet_path = base_path + "interactions.parquet"
     agents_parquet_path = base_path + "agents.parquet"
     supervisors_parquet_path = base_path + "supervisors.parquet"
-    # Define paths for optimized Parquet files
-   optimized_base_path = "abfss://<container_name>@<account_name>.dfs.core.windows.net/optimized_data/"
-   interactions_enriched_path = optimized_base_path + "interactions_enriched.parquet"
-   agents_cleaned_path = optimized_base_path + "agents_cleaned.parquet"
-   supervisors_cleaned_path = optimized_base_path + "supervisors_cleaned.parquet"
-   
-   # Define paths for partitioned Parquet files
-   interactions_partitioned_path = optimized_base_path + "interactions_enriched_partitioned.parquet"
-   agents_partitioned_path = optimized_base_path + "agents_cleaned_partitioned.parquet"
-   supervisors_partitioned_path = optimized_base_path + "supervisors_cleaned_partitioned.parquet"
+
+    optimized_base_path = "abfss://<container_name>@<account_name>.dfs.core.windows.net/optimized_data/"
+    interactions_enriched_path = optimized_base_path + "interactions_enriched.parquet"
+    agents_cleaned_path = optimized_base_path + "agents_cleaned.parquet"
+    supervisors_cleaned_path = optimized_base_path + "supervisors_cleaned.parquet"
+
+    interactions_partitioned_path = optimized_base_path + "interactions_enriched_partitioned.parquet"
+    agents_partitioned_path = optimized_base_path + "agents_cleaned_partitioned.parquet"
+    supervisors_partitioned_path = optimized_base_path + "supervisors_cleaned_partitioned.parquet"
     ```
 
-3. **Define Schemas for the Files**:
+4. **Define Schemas for the Files**:
     ```python
     interactions_schema = StructType([
         StructField("interaction_id", StringType(), True),
@@ -96,14 +95,14 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     ])
     ```
 
-4. **Read Data from CSV Files**:
+5. **Read Data from CSV Files**:
     ```python
     interactions_df = spark.read.csv(interactions_path, schema=interactions_schema, header=True)
     agents_df = spark.read.csv(agents_path, schema=agents_schema, header=True)
     supervisors_df = spark.read.csv(supervisors_path, schema=supervisors_schema, header=True)
     ```
 
-5. **Save DataFrames as Parquet**:
+6. **Save DataFrames as Parquet**:
     ```python
     interactions_df.write.parquet(interactions_parquet_path, mode='overwrite')
     agents_df.write.parquet(agents_parquet_path, mode='overwrite')
