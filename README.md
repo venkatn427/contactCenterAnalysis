@@ -125,8 +125,8 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     ```
 
 3. **Handle Missing Values**:
-   # All Id columns (agent_id, interaction_id, supervisor_id) are mandatory within the file and no missing values.
-   # Adding a default name as Unknown if name is missing in the dataset considering an agent is always part of one team and team is not empty. 
+All Id columns (agent_id, interaction_id, supervisor_id) are mandatory within the file and no missing values.
+Adding a default name as Unknown if name is missing in the dataset considering an agent is always part of one team and team is not empty. 
     ```python
     interactions_df_cleaned = interactions_df_dedup.na.drop(subset=['interaction_id', 'agent_id'])
     agents_df_cleaned = agents_df_dedup.na.fill({"name": "Unknown"})
@@ -136,8 +136,8 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 ## Data Enrichment
 
 1. **Join with Agents and Supervisors**:
-   # Assuming one supervisor for one team. to get all agents along with supervisors we use left join on interactions table.
-   # Full joins are used to retain all records from both tables, useful for comprehensive data analysis
+Assuming one supervisor for one team. to get all agents along with supervisors we use left join on interactions table.
+Full joins are used to retain all records from both tables, useful for comprehensive data analysis
  
     ```python
     # Join interactions with agents
@@ -245,8 +245,8 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     supervisors_df_cleaned.write.partitionBy("team").parquet(supervisors_partitioned_path, mode
 
 3. **Using Broadcast Join while joining agents with Interactions Dataset**:
-1. # Assuming Agents Dataset is smaller compared to Interactions and can fit in memory.
-2. # Assuming Supervisors Dataset is smaller compared to Interactions and can fit in memory.
+Assuming Agents Dataset is smaller compared to Interactions and can fit in memory.
+Assuming Supervisors Dataset is smaller compared to Interactions and can fit in memory.
    
 ```python
 from pyspark.sql.functions import broadcast
