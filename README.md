@@ -58,7 +58,7 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     agents_parquet_path = base_path + "agents.parquet"
     supervisors_parquet_path = base_path + "supervisors.parquet"
 
-    optimized_base_path = "abfss://<container_name>@<account_name>.dfs.core.windows.net/optimized_data/"
+    optimized_base_path = base_path + "optimized_data/"
     interactions_enriched_path = optimized_base_path + "interactions_enriched.parquet"
     agents_cleaned_path = optimized_base_path + "agents_cleaned.parquet"
     supervisors_cleaned_path = optimized_base_path + "supervisors_cleaned.parquet"
