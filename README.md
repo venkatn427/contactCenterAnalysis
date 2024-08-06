@@ -2,6 +2,26 @@
 
 This project is designed to process and analyze contact center data using Apache Spark on Databricks. The goal is to ingest, clean, transform, and analyze data to provide valuable insights for both agents and supervisors.
 
+## Project Structure
+
+- **main.py**: Main script to run the data processing and analytics pipeline.
+- **utils.py**: Utility functions for reading and writing data.
+- **schema.py**: Schema definitions for the data.
+- **constant.py**: Constants used in the project.
+
+## Installation
+
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/venkatn427/contactCenterAnalysis.git
+    cd contactCenterAnalysis
+    ```
+
+2. Install the required packages:
+    ```bash
+    pip install -r requirements.txt
+    ```
+    
 ## Table of Contents
 
 1. [Introduction](#introduction)
@@ -24,6 +44,19 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 - Azure Data Lake Storage (ADLS)
 - Databricks cluster with Spark
 
+## Usage
+   Run main script 
+   ```python
+      python main.py
+   ```
+## Functions 
+   Data Ingestion: Reads CSV files and writes them to Parquet.
+   Data Cleaning and Transformation: Deduplicates and cleans data.
+   Data Enrichment: Joins dataframes and enriches the data.
+   Reporting and Analytics: Creates dashboard aggregates and team performance reports.
+   Optimization: Writes data using Snappy compression and partitions data for efficient reads.
+   Real-time Updates: Sets up Spark streaming for near real-time updates.
+      
 ### Installation
 
 1. **Create a Databricks Cluster**:
