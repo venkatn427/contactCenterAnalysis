@@ -7,7 +7,7 @@ from pyspark.sql.functions import unix_timestamp, when, count, avg, sum, col, br
 spark = SparkSession.builder.appName("ContactCenterAnalytics").getOrCreate()
 
 # Define paths for CSV files
-base_path = "abfss://<container_name>@<account_name>.dfs.core.windows.net/contact-center-analytics/"
+base_path = "abfss://<adfs_path>contact-center-analytics/"
 interactions_path = base_path + "interactions.csv"
 agents_path = base_path + "agents.csv"
 supervisors_path = base_path + "supervisors.csv"
@@ -18,7 +18,7 @@ agents_parquet_path = base_path + "agents.parquet"
 supervisors_parquet_path = base_path + "supervisors.parquet"
 
 # Define paths for optimized Parquet files
-optimized_base_path = "abfss://<container_name>@<account_name>.dfs.core.windows.net/optimized_data/"
+optimized_base_path = base_path + "optimized_data/"
 interactions_enriched_path = optimized_base_path + "interactions_enriched.parquet"
 agents_cleaned_path = optimized_base_path + "agents_cleaned.parquet"
 supervisors_cleaned_path = optimized_base_path + "supervisors_cleaned.parquet"
@@ -27,6 +27,8 @@ supervisors_cleaned_path = optimized_base_path + "supervisors_cleaned.parquet"
 interactions_partitioned_path = optimized_base_path + "interactions_enriched_partitioned.parquet"
 agents_partitioned_path = optimized_base_path + "agents_cleaned_partitioned.parquet"
 supervisors_partitioned_path = optimized_base_path + "supervisors_cleaned_partitioned.parquet"
+
+detailed_reports_df_parquet_path = optimized_base_path + "detailed_reports_df.parquet"
 
 # Define schemas for the files
 interactions_schema = StructType([
@@ -54,7 +56,7 @@ supervisors_schema = StructType([
 ])
 
 # Data Ingestion
-# Read data from CSV files with try-catch
+# Read data from CSV files and create DataFrames
 try:
     interactions_df = spark.read.csv(interactions_path, schema=interactions_schema)
 except Exception as e:
@@ -78,7 +80,7 @@ try:
 except Exception as e:
     print(f"Error writing Parquet files: {e}")
 
-# Read from Parquet files
+# Read from Parquet files and create DataFrames
 try:
     interactions_df_parquet = spark.read.parquet(interactions_parquet_path)
     agents_df_parquet = spark.read.parquet(agents_parquet_path)
@@ -86,20 +88,19 @@ try:
 except Exception as e:
     print(f"Error reading Parquet files: {e}")
 
-# Data Cleaning and Transformation
-# Remove duplicates
+# Data Cleaning and Transformation 
+# Remove duplicates 
 interactions_df_dedup = interactions_df.dropDuplicates(['interaction_id'])
 agents_df_dedup = agents_df.dropDuplicates(['agent_id'])
 supervisors_df_dedup = supervisors_df.dropDuplicates(['supervisor_id'])
 
-# Handle missing values
+# Handle missing values 
 interactions_df_cleaned = interactions_df_dedup.na.drop(subset=['interaction_id', 'agent_id'])
 agents_df_cleaned = agents_df_dedup.na.fill({"name": "Unknown"})
 supervisors_df_cleaned = supervisors_df_dedup.na.fill({"name": "Unknown"})
 
 # Data Enrichment
-# Join interactions with agents using broadcast join for efficient small table join
-# Broadcast joins are efficient when one of the tables is small enough to fit in memory
+# Join interactions with agents based on the agentid using a left join
 interactions_enriched_df = interactions_df_cleaned.join(broadcast(agents_df_cleaned), on='agent_id', how='left')
 
 # Join with supervisors based on the team using a left join
@@ -124,7 +125,6 @@ interactions_enriched_df = interactions_enriched_df.withColumn("resolution_statu
 
 # Reporting and Analytics
 # Agent Dashboard - Insights by Agent (Very Low Latency)
-# Compute aggregates
 dashboard_aggregates_df = interactions_enriched_df.groupBy("agent_id").agg(
     count("interaction_id").alias("num_interactions"),
     avg("interaction_duration").alias("avg_interaction_duration"),
@@ -159,8 +159,8 @@ team_performance_df = team_performance_df.withColumn(
 # Join with supervisor information for detailed reporting using broadcast join
 detailed_reports_df = team_performance_df.join(broadcast(supervisors_df_cleaned), on='team', how='left')
 
-# Display detailed reports
-detailed_reports_df.show()
+# Write detailed reports as Parquet files (optimized for read efficiency) for faster subsequent reads
+detailed_reports_df.write.parquet(detailed_reports_df_parquet_path, mode='overwrite',compression='snappy')
 
 # Optimization
 # Use Snappy compression for storage and read efficiency
@@ -173,7 +173,6 @@ except Exception as e:
 
 # Data partition for efficient read by team and agent_id
 try:
-    # Data partition for efficient read by team and agent_id
     interactions_enriched_df.write.partitionBy("agent_id").parquet(interactions_partitioned_path, mode='overwrite', compression='snappy')
     agents_df_cleaned.write.partitionBy("team").parquet(agents_partitioned_path, mode='overwrite', compression='snappy')
     supervisors_df_cleaned.write.partitionBy("team").parquet(supervisors_partitioned_path, mode='overwrite', compression='snappy')
