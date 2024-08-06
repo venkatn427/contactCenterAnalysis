@@ -117,7 +117,7 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 ## Data Cleaning and Transformation
 
 1. **Remove Duplicates**:
-      *Assuming we have a interaction id for each call or chat that's initited by customer.*
+      1. *Assuming we have a interaction id for each call or chat that's initited by customer.*
     ```python
     interactions_df_dedup = interactions_df.dropDuplicates(['interaction_id'])
     agents_df_dedup = agents_df.dropDuplicates(['agent_id'])
@@ -125,8 +125,8 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     ```
 
 3. **Handle Missing Values**:
-      *All Id columns (agent_id, interaction_id, supervisor_id) are mandatory within the file and no missing values.*
-      *Adding a default name as Unknown if name is missing in the dataset considering an agent is always part of one team and team is not empty.*
+      1. *All Id columns (agent_id, interaction_id, supervisor_id) are mandatory within the file and no missing values.*
+      2. *Adding a default name as Unknown if name is missing in the dataset considering an agent is always part of one team and team is not empty.*
     ```python
     interactions_df_cleaned = interactions_df_dedup.na.drop(subset=['interaction_id', 'agent_id'])
     agents_df_cleaned = agents_df_dedup.na.fill({"name": "Unknown"})
