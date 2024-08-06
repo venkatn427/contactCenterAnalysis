@@ -108,7 +108,7 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     agents_df.write.parquet(agents_parquet_path, mode='overwrite')
     supervisors_df.write.parquet(supervisors_parquet_path, mode='overwrite')
     ```
-7. **Read from Parquet files
+7. **Read from Parquet files**
    ```python
    interactions_df_parquet = spark.read.parquet(interactions_parquet_path)
    agents_df_parquet = spark.read.parquet(agents_parquet_path)
