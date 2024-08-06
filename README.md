@@ -251,25 +251,25 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 3. **Using Broadcast Join while joining agents with Interactions Dataset**:
    1. *Assuming Agents and Supervisors Datasets is smaller compared to Interactions and can fit in memory*
    2. *Broadcast joins can be more efficient than regular joins because they avoid the expensive shuffle operation that normally occurs during a join. Shuffling involves redistributing data across nodes, which can be slow and resource-intensive.*
+      
+   ```python
+   from pyspark.sql.functions import broadcast
    
-```python
-from pyspark.sql.functions import broadcast
-
-# Broadcast join with agents
-
-interactions_enriched_df = interactions_df_cleaned.join(
-    broadcast(agents_df_cleaned), on='agent_id', how='left'
-)
-
-# Broadcast join with supervisors based on team
-interactions_enriched_df = interactions_enriched_df.join(
-    broadcast(supervisors_df_cleaned),
-    interactions_enriched_df.team == supervisors_df_cleaned.team,
-    how='left'
-).select(
-    "interaction_id", "agent_id", "customer_id", "start_time", "end_time",
-    "issue_type", "resolution", "agents_df_cleaned.name", "team",
-    "supervisor_id", "supervisors_df_cleaned.name", "supervisors_df_cleaned.hire_date"
-).withColumnRenamed("agents_df_cleaned.name", "agent_name") \
- .withColumnRenamed("supervisors_df_cleaned.name", "supervisor_name")
+   # Broadcast join with agents
+   
+   interactions_enriched_df = interactions_df_cleaned.join(
+       broadcast(agents_df_cleaned), on='agent_id', how='left'
+   )
+   
+   # Broadcast join with supervisors based on team
+   interactions_enriched_df = interactions_enriched_df.join(
+       broadcast(supervisors_df_cleaned),
+       interactions_enriched_df.team == supervisors_df_cleaned.team,
+       how='left'
+   ).select(
+       "interaction_id", "agent_id", "customer_id", "start_time", "end_time",
+       "issue_type", "resolution", "agents_df_cleaned.name", "team",
+       "supervisor_id", "supervisors_df_cleaned.name", "supervisors_df_cleaned.hire_date"
+   ).withColumnRenamed("agents_df_cleaned.name", "agent_name") \
+    .withColumnRenamed("supervisors_df_cleaned.name", "supervisor_name")
 
