@@ -57,6 +57,16 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     interactions_parquet_path = base_path + "interactions.parquet"
     agents_parquet_path = base_path + "agents.parquet"
     supervisors_parquet_path = base_path + "supervisors.parquet"
+    # Define paths for optimized Parquet files
+   optimized_base_path = "abfss://<container_name>@<account_name>.dfs.core.windows.net/optimized_data/"
+   interactions_enriched_path = optimized_base_path + "interactions_enriched.parquet"
+   agents_cleaned_path = optimized_base_path + "agents_cleaned.parquet"
+   supervisors_cleaned_path = optimized_base_path + "supervisors_cleaned.parquet"
+   
+   # Define paths for partitioned Parquet files
+   interactions_partitioned_path = optimized_base_path + "interactions_enriched_partitioned.parquet"
+   agents_partitioned_path = optimized_base_path + "agents_cleaned_partitioned.parquet"
+   supervisors_partitioned_path = optimized_base_path + "supervisors_cleaned_partitioned.parquet"
     ```
 
 3. **Define Schemas for the Files**:
@@ -103,13 +113,16 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 ## Data Cleaning and Transformation
 
 1. **Remove Duplicates**:
+     Assuming we have a interaction id for each call or chat that's initited by customer. 
     ```python
     interactions_df_dedup = interactions_df.dropDuplicates(['interaction_id'])
     agents_df_dedup = agents_df.dropDuplicates(['agent_id'])
     supervisors_df_dedup = supervisors_df.dropDuplicates(['supervisor_id'])
     ```
 
-2. **Handle Missing Values**:
+3. **Handle Missing Values**:
+   All Id columns (agent_id, interaction_id, supervisor_id) are mandatory within the file and no missing values.
+      Adding a default name as Unknown if name is missing in the dataset considering an agent is always part of one team and team is not empty. 
     ```python
     interactions_df_cleaned = interactions_df_dedup.na.drop(subset=['interaction_id', 'agent_id'])
     agents_df_cleaned = agents_df_dedup.na.fill({"name": "Unknown"})
@@ -118,7 +131,10 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 
 ## Data Enrichment
 
-1. **Broadcast Join with Agents and Supervisors**:
+1. **Join with Agents and Supervisors**:
+   # Assuming one supervisor for one team. to get all agents along with supervisors we use left join on interactions table.
+   # Full joins are used to retain all records from both tables, useful for comprehensive data analysis
+ 
     ```python
     # Join interactions with agents
     interactions_enriched_df = interactions_df_cleaned.join(agents_df_cleaned, on='agent_id', how='left')
@@ -134,7 +150,7 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
                                                    .withColumnRenamed("supervisors_df_cleaned.name", "supervisor_name")
 
 
-2. **Add New Columns**:
+3. **Add New Columns**:
     ```python
     # Calculate interaction duration
     interactions_enriched_df = interactions_enriched_df.withColumn(
@@ -225,7 +241,7 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     supervisors_df_cleaned.write.partitionBy("team").parquet(supervisors_partitioned_path, mode
 
 3. **Using Broadcast Join while joining agents with Interactions Dataset**:
-*Assumptions
+*Assumptions*
 1. Agents Dataset is smaller compared to Interactions and can fit in memory.
 2. Supervisors Dataset is smaller compared to Interactions and can fit in memory.
    
