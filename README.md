@@ -67,12 +67,12 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 
 ### Import Libraries
     ```python 
-    import logging
-    from pyspark.sql import SparkSession
-    import pyspark.sql.functions as F
-    from utils import read_csv_with_schema, write_delta_with_mode, read_delta, write_delta_with_compression, write_partitioned_delta
-    from schema import interactions_schema, agents_schema, supervisors_schema
-    from constant import *
+        import logging
+        from pyspark.sql import SparkSession
+        import pyspark.sql.functions as F
+        from utils import read_csv_with_schema, write_delta_with_mode, read_delta, write_delta_with_compression, write_partitioned_delta
+        from schema import interactions_schema, agents_schema, supervisors_schema
+        from constant import *
     ```
 
     1. logging: For logging messages.
@@ -81,13 +81,12 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     4. schema: Defines schemas for CSV files.
     5. constant: Contains file paths and other constants
 
-### Setup
+### Setup - Configure logging and Initializes Spark session
     ```python 
-    # Configures logging.
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__)
-    # Initializes a Spark session.
-    spark = SparkSession.builder.appName("ContactCenterAnalytics").getOrCreate()
+        logging.basicConfig(level=logging.INFO)
+        logger = logging.getLogger(__name__)
+
+        spark = SparkSession.builder.appName("ContactCenterAnalytics").getOrCreate()
     ```
 ## Data Ingestion
 
