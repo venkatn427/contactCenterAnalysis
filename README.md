@@ -120,25 +120,19 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 
 1. **Broadcast Join with Agents and Supervisors**:
     ```python
-    from pyspark.sql.functions import broadcast
+    # Join interactions with agents
+    interactions_enriched_df = interactions_df_cleaned.join(agents_df_cleaned, on='agent_id', how='left')
 
-    # Broadcast join with agents
-    interactions_enriched_df = interactions_df_cleaned.join(
-        broadcast(agents_df_cleaned), on='agent_id', how='left'
-    )
+    # Join with supervisors based on the team
+    interactions_enriched_df = interactions_enriched_df.join(supervisors_df_cleaned, 
+                                                         interactions_enriched_df.team == supervisors_df_cleaned.team,
+                                                         how='left') \
+                                                   .select("interaction_id", "agent_id", "customer_id", "start_time", "end_time", 
+                                                           "issue_type", "resolution", "name", "team", 
+                                                           "supervisor_id", "supervisors_df_cleaned.name", "supervisors_df_cleaned.hire_date") \
+                                                   .withColumnRenamed("name", "agent_name") \
+                                                   .withColumnRenamed("supervisors_df_cleaned.name", "supervisor_name")
 
-    # Broadcast join with supervisors based on team
-    interactions_enriched_df = interactions_enriched_df.join(
-        broadcast(supervisors_df_cleaned),
-        interactions_enriched_df.team == supervisors_df_cleaned.team,
-        how='left'
-    ).select(
-        "interaction_id", "agent_id", "customer_id", "start_time", "end_time",
-        "issue_type", "resolution", "agents_df_cleaned.name", "team",
-        "supervisor_id", "supervisors_df_cleaned.name", "supervisors_df_cleaned.hire_date"
-    ).withColumnRenamed("agents_df_cleaned.name", "agent_name") \
-     .withColumnRenamed("supervisors_df_cleaned.name", "supervisor_name")
-    ```
 
 2. **Add New Columns**:
     ```python
@@ -229,3 +223,30 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     interactions_enriched_df.write.partitionBy("agent_id").parquet(interactions_partitioned_path, mode='overwrite', compression='snappy')
     agents_df_cleaned.write.partitionBy("team").parquet(agents_partitioned_path, mode='overwrite', compression='snappy')
     supervisors_df_cleaned.write.partitionBy("team").parquet(supervisors_partitioned_path, mode
+
+3. **Using Broadcast Join while joining agents with Interactions Dataset**:
+*Assumptions
+1. Agents Dataset is smaller compared to Interactions and can fit in memory.
+2. Supervisors Dataset is smaller compared to Interactions and can fit in memory.
+   
+```python
+from pyspark.sql.functions import broadcast
+
+# Broadcast join with agents
+
+interactions_enriched_df = interactions_df_cleaned.join(
+    broadcast(agents_df_cleaned), on='agent_id', how='left'
+)
+
+# Broadcast join with supervisors based on team
+interactions_enriched_df = interactions_enriched_df.join(
+    broadcast(supervisors_df_cleaned),
+    interactions_enriched_df.team == supervisors_df_cleaned.team,
+    how='left'
+).select(
+    "interaction_id", "agent_id", "customer_id", "start_time", "end_time",
+    "issue_type", "resolution", "agents_df_cleaned.name", "team",
+    "supervisor_id", "supervisors_df_cleaned.name", "supervisors_df_cleaned.hire_date"
+).withColumnRenamed("agents_df_cleaned.name", "agent_name") \
+ .withColumnRenamed("supervisors_df_cleaned.name", "supervisor_name")
+
