@@ -2,6 +2,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, TimestampType
 from pyspark.sql.functions import unix_timestamp, when, count, avg, sum, col, broadcast
+from pyspark.sql.streaming import StreamingQuery
 
 # Initialize Spark session
 spark = SparkSession.builder.appName("ContactCenterAnalytics").getOrCreate()
@@ -159,8 +160,8 @@ team_performance_df = team_performance_df.withColumn(
 # Join with supervisor information for detailed reporting using broadcast join
 detailed_reports_df = team_performance_df.join(broadcast(supervisors_df_cleaned), on='team', how='left')
 
-# Write detailed reports as Parquet files (optimized for read efficiency) for faster subsequent reads
-detailed_reports_df.write.parquet(detailed_reports_df_parquet_path, mode='overwrite',compression='snappy')
+# Write detailed reports as partitioned Parquet files for efficient read
+detailed_reports_df.write.parquet(detailed_reports_df_parquet_path, on="team", mode='overwrite',compression='snappy')
 
 # Optimization
 # Use Snappy compression for storage and read efficiency
@@ -180,7 +181,6 @@ except Exception as e:
     print(f"Error writing parrtitioned Parquet files: {e}")
     
 # Spark streaming for near real-time updates in dashboard refreshing every 10 sec
-from pyspark.sql.streaming import StreamingQuery
 
 # Define the query for streaming updates
 query = dashboard_aggregates_df.writeStream \

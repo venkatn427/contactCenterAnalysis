@@ -273,3 +273,13 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
    ).withColumnRenamed("agents_df_cleaned.name", "agent_name") \
     .withColumnRenamed("supervisors_df_cleaned.name", "supervisor_name")
 
+## Evaluation Metrics 
+1. **Agent Dashboard**
+    1. Latency: Time taken for data to reflect in the dashboard (seconds)
+    2. Data Freshness: Time lag between data ingestion and dashboard availability (seconds)
+    3. Throughput: Records processed per second (RPS)
+    
+2. **Supervisor Dashboard**
+    1. Data Integrity: Consistency and completeness of each micro-batch (percentage).
+    2. Batch Processing Time: Time to process a micro-batch (seconds).
+    3. Resource Utilization: CPU and memory usage (percentage or MB).
