@@ -136,8 +136,10 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 ## Data Enrichment
 
 1. **Join with Agents and Supervisors**:
-Assuming one supervisor for one team. to get all agents along with supervisors we use left join on interactions table.
-Full joins are used to retain all records from both tables, useful for comprehensive data analysis
+   1. *Assuming one supervisor for one team. to get all agents along with supervisors we use left join on interactions table*
+   2. *Full joins are used to retain all records from both tables, useful for comprehensive data analysis*
+   3. *Left joins are efficient when we want to keep all records from the left table and match the records from the right table*
+
  
     ```python
     # Join interactions with agents
@@ -245,8 +247,8 @@ Full joins are used to retain all records from both tables, useful for comprehen
     supervisors_df_cleaned.write.partitionBy("team").parquet(supervisors_partitioned_path, mode
 
 3. **Using Broadcast Join while joining agents with Interactions Dataset**:
-Assuming Agents Dataset is smaller compared to Interactions and can fit in memory.
-Assuming Supervisors Dataset is smaller compared to Interactions and can fit in memory.
+   1. *Assuming Agents and Supervisors Datasets is smaller compared to Interactions and can fit in memory*
+   2. *Broadcast joins can be more efficient than regular joins because they avoid the expensive shuffle operation that normally occurs during a join. Shuffling involves redistributing data across nodes, which can be slow and resource-intensive.*
    
 ```python
 from pyspark.sql.functions import broadcast
