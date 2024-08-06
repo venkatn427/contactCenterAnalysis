@@ -75,12 +75,12 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     ```python
     from pyspark.sql import SparkSession
     from pyspark.sql.types import StructType, StructField, StringType, TimestampType
-    from pyspark.sql.functions import unix_timestamp, when, count, avg, sum
+    import pyspark.sql.functions as F
 
     spark = SparkSession.builder.appName("ContactCenterAnalytics").getOrCreate()
     ```
 
-2. **Define File Paths**:
+2. **Define File Paths - Constants.py**:
     ```python
     base_path = "/abfss:/<container_name>/contact-center-analytics/"
     interactions_path = base_path + "interactions.csv"
@@ -103,7 +103,7 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     detailed_reports_df_parquet_path = optimized_base_path + "detailed_reports_df.parquet"
     ```
 
-4. **Define Schemas for the Files**:
+4. **Define Schemas for the Files - Schema.py**:
     ```python
     interactions_schema = StructType([
         StructField("interaction_id", StringType(), True),
@@ -130,20 +130,20 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     ])
     ```
 
-5. **Read Data from CSV Files**:
+5. **Read Data from CSV Files - utils.py**:
     ```python
     interactions_df = spark.read.csv(interactions_path, schema=interactions_schema, header=True)
     agents_df = spark.read.csv(agents_path, schema=agents_schema, header=True)
     supervisors_df = spark.read.csv(supervisors_path, schema=supervisors_schema, header=True)
     ```
 
-6. **Save DataFrames as Parquet**:
+6. **Save DataFrames as Parquet - utils.py**:
     ```python
     interactions_df.write.parquet(interactions_parquet_path, mode='overwrite')
     agents_df.write.parquet(agents_parquet_path, mode='overwrite')
     supervisors_df.write.parquet(supervisors_parquet_path, mode='overwrite')
     ```
-7. **Read from Parquet files**
+7. **Read from Parquet files - utils.py**
    ```python
    interactions_df_parquet = spark.read.parquet(interactions_parquet_path)
    agents_df_parquet = spark.read.parquet(agents_parquet_path)
@@ -211,10 +211,10 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 1. **Agent Dashboard - Insights by Agent**:
     ```python
     dashboard_aggregates_df = interactions_enriched_df.groupBy("agent_id").agg(
-        count("interaction_id").alias("num_interactions"),
-        avg("interaction_duration").alias("avg_interaction_duration"),
-        sum(when(interactions_enriched_df.resolution_status == 'Resolved', 1).otherwise(0)).alias("resolved_interactions"),
-        count("interaction_id").alias("total_interactions")
+        F.count("interaction_id").alias("num_interactions"),
+        F.avg("interaction_duration").alias("avg_interaction_duration"),
+        F.sum(F.when(interactions_enriched_df.resolution_status == 'Resolved', 1).otherwise(0)).alias("resolved_interactions"),
+        F.count("interaction_id").alias("total_interactions")
     )
 
     # Compute resolution rate
@@ -251,10 +251,10 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 3. **Supervisor Dashboard - Insights by Team**:
     ```python
     team_performance_df = interactions_enriched_df.groupBy("team").agg(
-        count("interaction_id").alias("num_interactions"),
-        avg("interaction_duration").alias("avg_interaction_duration"),
-        sum(when(col("resolution_status") == 'Resolved', 1).otherwise(0)).alias("resolved_interactions"),
-        count("interaction_id").alias("total_interactions")
+        F.count("interaction_id").alias("num_interactions"),
+        F.avg("interaction_duration").alias("avg_interaction_duration"),
+        F.sum(F.when(col("resolution_status") == 'Resolved', 1).otherwise(0)).alias("resolved_interactions"),
+        F.count("interaction_id").alias("total_interactions")
     )
 
     team_performance_df = team_performance_df.withColumn(
@@ -316,3 +316,6 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     1. Data Integrity: Consistency and completeness of each micro-batch (percentage).
     2. Batch Processing Time: Time to process a micro-batch (seconds).
     3. Resource Utilization: CPU and memory usage (percentage or MB).
+  
+## Improvements:
+    1. Segregate the code into multiple files to have constants, schema, util functions like read, write and pipeline code. this will help in scaling the pipeline with new datasets and also maintenable.
