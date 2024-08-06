@@ -28,88 +28,90 @@ def read_csv_with_schema(spark: SparkSession, path: str, schema) -> DataFrame:
         logger.error(f"Error reading CSV file {path}: {e}")
         return None
 
-def write_parquet_with_mode(df: DataFrame, path: str) -> None:
+def write_delta_with_mode(df: DataFrame, path: str) -> None:
     """
-    Write DataFrame to Parquet with overwrite mode.
+    Write DataFrame to Delta format with overwrite mode.
 
     Args:
-        df (DataFrame): DataFrame to write to Parquet.
-        path (str): Path to write the Parquet file.
+        df (DataFrame): DataFrame to write to Delta.
+        path (str): Path to write the Delta table.
 
     Returns:
         None
 
     Raises:
-        Exception: If an error occurs while writing the Parquet file.
+        Exception: If an error occurs while writing the Delta table.
     """
     try:
-        df.write.parquet(path, mode='overwrite')
-        logger.info(f"Successfully wrote Parquet file to {path}")
+        df.write.format("delta").mode("overwrite").save(path)
+        logger.info(f"Successfully wrote Delta table to {path}")
     except Exception as e:
-        logger.error(f"Error writing Parquet file {path}: {e}")
+        logger.error(f"Error writing Delta table {path}: {e}")
 
-def read_parquet(spark: SparkSession, path: str) -> DataFrame:
+def read_delta(spark: SparkSession, path: str) -> DataFrame:
     """
-    Read Parquet file and return DataFrame.
+    Read Delta table from the specified path.
 
     Args:
-        spark (SparkSession): SparkSession object.
-        path (str): Path to the Parquet file.
+        spark (SparkSession): Spark session object.
+        path (str): Path to the Delta table.
 
     Returns:
-        DataFrame: DataFrame containing the data from the Parquet file.
-                  Returns None if an error occurs.
+        DataFrame: Delta table read from the specified path.
+
+    Raises:
+        Exception: If an error occurs while reading the Delta table.
     """
     try:
-        df = spark.read.parquet(path)
-        logger.info(f"Successfully read Parquet file from {path}")
+        df = spark.read.format("delta").load(path)
+        logger.info(f"Successfully read Delta table from {path}")
         return df
-
     except Exception as e:
-        logger.error(f"Error reading Parquet file {path}: {e}")
+        logger.error(f"Error reading Delta table {path}: {e}")
         return None
 
 
 
-def write_parquet_with_compression(df: DataFrame, path: str) -> None:
+def write_delta_with_compression(df: DataFrame, path: str, compression: str = "snappy") -> None:
     """
-    Write DataFrame to Parquet with Snappy compression.
+    Write DataFrame to Delta format with compression.
 
     Args:
-        df (DataFrame): DataFrame to write to Parquet.
-        path (str): Path to write the Parquet file.
-
-    Raises:
-        Exception: If an error occurs while writing the Parquet file.
+        df (DataFrame): DataFrame to write to Delta.
+        path (str): Path to write the Delta table.
+        compression (str, optional): Compression codec to use. Defaults to "snappy".
 
     Returns:
         None
-    """
-    try:
-        df.write.parquet(path, mode='overwrite', compression='snappy')
-        logger.info(f"Successfully wrote Parquet file with Snappy compression to {path}")
-    except Exception as e:
-        logger.error(f"Error writing Parquet file with Snappy compression to {path}: {e}")
-
-
-
-def write_partitioned_parquet(df: DataFrame, path: str, partition_col: str) -> None:
-    """
-    Write DataFrame to partitioned Parquet files.
-
-    Args:
-        df (DataFrame): DataFrame to write to Parquet.
-        path (str): Path to write the Parquet file.
-        partition_col (str): Name of the column to partition the data by.
 
     Raises:
-        Exception: If an error occurs while writing the partitioned Parquet file.
+        Exception: If an error occurs while writing the Delta table.
+    """
+    try:
+        df.write.format("delta").option("compression", compression).mode("overwrite").save(path)
+        logger.info(f"Successfully wrote Delta table with compression to {path}")
+    except Exception as e:
+        logger.error(f"Error writing Delta table {path}: {e}")
+
+
+
+def write_partitioned_delta(df: DataFrame, path: str, partition_cols: list) -> None:
+    """
+    Write partitioned DataFrame to Delta format.
+
+    Args:
+        df (DataFrame): DataFrame to write to Delta.
+        path (str): Path to write the Delta table.
+        partition_cols (list): List of columns to partition the data by.
 
     Returns:
         None
+
+    Raises:
+        Exception: If an error occurs while writing the Delta table.
     """
     try:
-        df.write.partitionBy(partition_col).parquet(path, mode='overwrite', compression='snappy')
-        logger.info(f"Successfully wrote partitioned Parquet file to {path}")
+        df.write.format("delta").partitionBy(*partition_cols).mode("overwrite").save(path)
+        logger.info(f"Successfully wrote partitioned Delta table to {path}")
     except Exception as e:
-        logger.error(f"Error writing partitioned Parquet file {path}: {e}")
+        logger.error(f"Error writing partitioned Delta table {path}: {e}")

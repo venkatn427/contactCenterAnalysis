@@ -3,7 +3,7 @@
 import logging
 from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
-from utils import read_csv_with_schema, write_parquet_with_mode, read_parquet, write_parquet_with_compression, write_partitioned_parquet
+from utils import read_csv_with_schema, write_delta_with_mode, read_delta, write_delta_with_compression, write_partitioned_delta
 from schema import interactions_schema, agents_schema, supervisors_schema
 from constant import *
 # Setup logging
@@ -18,10 +18,10 @@ def main():
     This function performs data ingestion, cleaning, transformation, enrichment, reporting, 
     analytics, optimization, and sets up Spark streaming for near real-time updates in dashboard 
     refreshing every 10 sec. 
-    It reads CSV files with specified schemas, writes Parquet files, deduplicates data, fills 
+    It reads CSV files with specified schemas, writes Delta files, deduplicates data, fills 
     missing values, enriches data by joining DataFrames, calculates interaction duration, 
     resolution status, creates dashboard aggregates, caches data, calculates team performance, 
-    generates detailed reports, writes partitioned Parquet files, uses Snappy compression for 
+    generates detailed reports, writes partitioned Delta files, uses Snappy compression for 
     storage efficiency, and defines a Spark streaming query for streaming updates.
     It includes a function get_dashboard_data to retrieve the latest dashboard data and 
     simulates near real-time updates every 10 seconds.
@@ -32,21 +32,21 @@ def main():
     supervisors_df = read_csv_with_schema(spark, supervisors_path, supervisors_schema)
 
     if interactions_df:
-        write_parquet_with_mode(interactions_df, interactions_parquet_path)
+        write_delta_with_mode(interactions_df, interactions_delta_path)
     if agents_df:
-        write_parquet_with_mode(agents_df, agents_parquet_path)
+        write_delta_with_mode(agents_df, agents_delta_path)
     if supervisors_df:
-        write_parquet_with_mode(supervisors_df, supervisors_parquet_path)
+        write_delta_with_mode(supervisors_df, supervisors_delta_path)
 
-    # Read from Parquet files
-    interactions_df_parquet = read_parquet(spark, interactions_parquet_path)
-    agents_df_parquet = read_parquet(spark, agents_parquet_path)
-    supervisors_df_parquet = read_parquet(spark, supervisors_parquet_path)
+    # Read from Delta files
+    interactions_df_delta = read_delta(spark, interactions_delta_path)
+    agents_df_delta = read_delta(spark, agents_delta_path)
+    supervisors_df_delta = read_delta(spark, supervisors_delta_path)
 
     # Data Cleaning and Transformation
-    interactions_df_dedup = interactions_df_parquet.dropDuplicates(['interaction_id'])
-    agents_df_dedup = agents_df_parquet.dropDuplicates(['agent_id'])
-    supervisors_df_dedup = supervisors_df_parquet.dropDuplicates(['supervisor_id'])
+    interactions_df_dedup = interactions_df_delta.dropDuplicates(['interaction_id'])
+    agents_df_dedup = agents_df_delta.dropDuplicates(['agent_id'])
+    supervisors_df_dedup = supervisors_df_delta.dropDuplicates(['supervisor_id'])
 
     interactions_df_cleaned = interactions_df_dedup.na.drop(subset=['interaction_id', 'agent_id'])
     agents_df_cleaned = agents_df_dedup.na.fill({"name": "Unknown"})
@@ -98,25 +98,25 @@ def main():
 
     detailed_reports_df = team_performance_df.join(F.broadcast(supervisors_df_cleaned), on='team', how='left')
 
-    write_partitioned_parquet(detailed_reports_df, detailed_reports_df_parquet_path, "team")
+    write_partitioned_delta(detailed_reports_df, detailed_reports_df_delta_path, "team")
 
     # Optimization
     # Use Snappy compression for storage and read efficiency
     if interactions_enriched_df:
-        write_parquet_with_compression(interactions_enriched_df, interactions_enriched_path)
+        write_delta_with_compression(interactions_enriched_df, interactions_enriched_path)
     if agents_df_cleaned:
-        write_parquet_with_compression(agents_df_cleaned, agents_cleaned_path)
+        write_delta_with_compression(agents_df_cleaned, agents_cleaned_path)
     if supervisors_df_cleaned:
-        write_parquet_with_compression(supervisors_df_cleaned, supervisors_cleaned_path)
+        write_delta_with_compression(supervisors_df_cleaned, supervisors_cleaned_path)
 
 
     # Data partition for efficient read by team and agent_id
     if interactions_enriched_df:
-        write_partitioned_parquet(interactions_enriched_df, interactions_partitioned_path, "team")
+        write_partitioned_delta(interactions_enriched_df, interactions_partitioned_path, "team")
     if agents_df_cleaned:
-        write_partitioned_parquet(agents_df_cleaned, agents_partitioned_path, "team")
+        write_partitioned_delta(agents_df_cleaned, agents_partitioned_path, "team")
     if supervisors_df_cleaned:
-        write_partitioned_parquet(supervisors_df_cleaned, supervisors_partitioned_path, "team")
+        write_partitioned_delta(supervisors_df_cleaned, supervisors_partitioned_path, "team")
 
     # Spark streaming for near real-time updates in dashboard refreshing every 10 sec
 

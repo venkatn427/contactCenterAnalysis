@@ -9,32 +9,27 @@ This project is designed to process and analyze contact center data using Apache
 - **schema.py**: Schema definitions for the data.
 - **constant.py**: Constants used in the project.
 
-## Installation
+`main.py` is a Python script designed to process and analyze contact center data using Apache Spark. The script performs data ingestion, cleaning, transformation, enrichment, reporting, and real-time updates.
 
-1. Clone the repository:
-    ```bash
-    git clone https://github.com/venkatn427/contactCenterAnalysis.git
-    cd contactCenterAnalysis
-    ```
+## Prerequisites
 
-2. Install the required packages:
-    ```bash
-    pip install -r requirements.txt
-    ```
+- Apache Spark
+- PySpark
+- Delta Lake
+- Python 3.x
 
-## Usage
-   Run main script 
-   ```python
-      python main.py
-   ```
-## Functions 
-   1. Data Ingestion: Reads CSV files and writes them to Parquet.
-   2. Data Cleaning and Transformation: Deduplicates and cleans data.
-   3. Data Enrichment: Joins dataframes and enriches the data.
-   4. Reporting and Analytics: Creates dashboard aggregates and team performance reports.
-   5. Optimization: Writes data using Snappy compression and partitions data for efficient reads.
-   6. Real-time Updates: Sets up Spark streaming for near real-time updates.
-    
+## Overview
+
+The script executes the following tasks:
+
+1. **Data Ingestion**: Reads CSV files into DataFrames with predefined schemas and writes them to Delta format.
+2. **Data Cleaning and Transformation**: Removes duplicates, handles missing values, and transforms data.
+3. **Data Enrichment**: Joins data from different sources and computes additional metrics.
+4. **Reporting and Analytics**: Aggregates data for reporting and calculates performance metrics.
+5. **Optimization**: Writes Delta files with Snappy compression and partitions data for efficiency.
+6. **Real-time Dashboard Updates**: Sets up a Spark streaming query to refresh dashboard data every 10 seconds.
+
+
 ## Table of Contents
 
 1. [Introduction](#introduction)
@@ -69,85 +64,57 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 3. **Mount ADLS to Databricks**:
    - Follow the Databricks documentation to mount your ADLS to the Databricks filesystem.
 
-## Data Ingestion
 
-1. **Initialize Spark Session**:
-    ```python
+## Code Description
+Imports 
+    ```python 
+    import logging
     from pyspark.sql import SparkSession
-    from pyspark.sql.types import StructType, StructField, StringType, TimestampType
     import pyspark.sql.functions as F
+    from utils import read_csv_with_schema, write_delta_with_mode, read_delta, write_delta_with_compression, write_partitioned_delta
+    from schema import interactions_schema, agents_schema, supervisors_schema
+    from constant import *
+    ````
 
+    1. logging: For logging messages.
+    2. pyspark.sql: For Spark SQL operations.
+    3. utils: Utility functions for reading and writing data.
+    4. schema: Defines schemas for CSV files.
+    5. constant: Contains file paths and other constants
+
+## Setup
+
+    ```python 
+    # Configures logging.
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+    # Initializes a Spark session.
     spark = SparkSession.builder.appName("ContactCenterAnalytics").getOrCreate()
     ```
-
-2. **Define File Paths - Constants.py**:
-    ```python
-    base_path = "/abfss:/<container_name>/contact-center-analytics/"
-    interactions_path = base_path + "interactions.csv"
-    agents_path = base_path + "agents.csv"
-    supervisors_path = base_path + "supervisors.csv"
-    
-    interactions_parquet_path = base_path + "interactions.parquet"
-    agents_parquet_path = base_path + "agents.parquet"
-    supervisors_parquet_path = base_path + "supervisors.parquet"
-
-    optimized_base_path = base_path + "optimized_data/"
-    interactions_enriched_path = optimized_base_path + "interactions_enriched.parquet"
-    agents_cleaned_path = optimized_base_path + "agents_cleaned.parquet"
-    supervisors_cleaned_path = optimized_base_path + "supervisors_cleaned.parquet"
-
-    interactions_partitioned_path = optimized_base_path + "interactions_enriched_partitioned.parquet"
-    agents_partitioned_path = optimized_base_path + "agents_cleaned_partitioned.parquet"
-    supervisors_partitioned_path = optimized_base_path + "supervisors_cleaned_partitioned.parquet"
-
-    detailed_reports_df_parquet_path = optimized_base_path + "detailed_reports_df.parquet"
-    ```
-
-4. **Define Schemas for the Files - Schema.py**:
-    ```python
-    interactions_schema = StructType([
-        StructField("interaction_id", StringType(), True),
-        StructField("agent_id", StringType(), True),
-        StructField("customer_id", StringType(), True),
-        StructField("start_time", TimestampType(), True),
-        StructField("end_time", TimestampType(), True),
-        StructField("issue_type", StringType(), True),
-        StructField("resolution", StringType(), True)
-    ])
-
-    agents_schema = StructType([
-        StructField("agent_id", StringType(), True),
-        StructField("name", StringType(), True),
-        StructField("team", StringType(), True),
-        StructField("hire_date", TimestampType(), True)
-    ])
-
-    supervisors_schema = StructType([
-        StructField("supervisor_id", StringType(), True),
-        StructField("name", StringType(), True),
-        StructField("team", StringType(), True),
-        StructField("hire_date", TimestampType(), True)
-    ])
-    ```
+## Data Ingestion
 
 5. **Read Data from CSV Files - utils.py**:
     ```python
-    interactions_df = spark.read.csv(interactions_path, schema=interactions_schema, header=True)
-    agents_df = spark.read.csv(agents_path, schema=agents_schema, header=True)
-    supervisors_df = spark.read.csv(supervisors_path, schema=supervisors_schema, header=True)
+    interactions_df = read_csv_with_schema(spark, interactions_path, interactions_schema)
+    agents_df = read_csv_with_schema(spark, agents_path, agents_schema)
+    supervisors_df = read_csv_with_schema(spark, supervisors_path, supervisors_schema)
     ```
 
-6. **Save DataFrames as Parquet - utils.py**:
+6. **Save DataFrames as Delta - utils.py**:
     ```python
-    interactions_df.write.parquet(interactions_parquet_path, mode='overwrite')
-    agents_df.write.parquet(agents_parquet_path, mode='overwrite')
-    supervisors_df.write.parquet(supervisors_parquet_path, mode='overwrite')
+    if interactions_df:
+        write_delta_with_mode(interactions_df, interactions_delta_path)
+    if agents_df:
+        write_delta_with_mode(agents_df, agents_delta_path)
+    if supervisors_df:
+        write_delta_with_mode(supervisors_df, supervisors_delta_path)
     ```
 7. **Read from Parquet files - utils.py**
    ```python
-   interactions_df_parquet = spark.read.parquet(interactions_parquet_path)
-   agents_df_parquet = spark.read.parquet(agents_parquet_path)
-   supervisors_df_parquet = spark.read.parquet(supervisors_parquet_path)
+    interactions_df_delta = read_delta(spark, interactions_delta_path)
+    agents_df_delta = read_delta(spark, agents_delta_path)
+    supervisors_df_delta = read_delta(spark, supervisors_delta_path)
+    ```
    
 ## Data Cleaning and Transformation
 
@@ -189,7 +156,6 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
                                                            "supervisor_id", "supervisors_df_cleaned.name", "supervisors_df_cleaned.hire_date") \
                                                    .withColumnRenamed("name", "agent_name") \
                                                    .withColumnRenamed("supervisors_df_cleaned.name", "supervisor_name")
-
 
 3. **Add New Columns**:
     ```python
@@ -247,6 +213,9 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
         dashboard_data.show()
         time.sleep(10)
     ```
+    1. Sets up a streaming query for real-time dashboard updates.
+    2. Defines a function to retrieve the latest data from the memory table.
+    3. Simulates real-time updates by printing dashboard data every 10 seconds.
 
 3. **Supervisor Dashboard - Insights by Team**:
     ```python
@@ -270,16 +239,22 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 
 1. **Use Snappy Compression for Storage and Read Efficiency**:
     ```python
-    interactions_enriched_df.write.parquet(interactions_enriched_path, mode='overwrite', compression='snappy')
-    agents_df_cleaned.write.parquet(agents_cleaned_path, mode='overwrite', compression='snappy')
-    supervisors_df_cleaned.write.parquet(supervisors_cleaned_path, mode='overwrite', compression='snappy')
+    if interactions_enriched_df:
+        write_delta_with_compression(interactions_enriched_df, interactions_enriched_path)
+    if agents_df_cleaned:
+        write_delta_with_compression(agents_df_cleaned, agents_cleaned_path)
+    if supervisors_df_cleaned:
+        write_delta_with_compression(supervisors_df_cleaned, supervisors_cleaned_path)
     ```
 
 2. **Data Partitioning for Efficient Read by Team and Agent ID**:
     ```python
-    interactions_enriched_df.write.partitionBy("agent_id").parquet(interactions_partitioned_path, mode='overwrite', compression='snappy')
-    agents_df_cleaned.write.partitionBy("team").parquet(agents_partitioned_path, mode='overwrite', compression='snappy')
-    supervisors_df_cleaned.write.partitionBy("team").parquet(supervisors_partitioned_path, mode
+    if interactions_enriched_df:
+        write_partitioned_delta(interactions_enriched_df, interactions_partitioned_path, "team")
+    if agents_df_cleaned:
+        write_partitioned_delta(agents_df_cleaned, agents_partitioned_path, "team")
+    if supervisors_df_cleaned:
+        write_partitioned_delta(supervisors_df_cleaned, supervisors_partitioned_path, "team")
 
 3. **Using Broadcast Join while joining agents with Interactions Dataset**:
    1. *Assuming Agents and Supervisors Datasets is smaller compared to Interactions and can fit in memory*
