@@ -21,6 +21,19 @@ This project is designed to process and analyze contact center data using Apache
     ```bash
     pip install -r requirements.txt
     ```
+
+## Usage
+   Run main script 
+   ```python
+      python main.py
+   ```
+## Functions 
+   1. Data Ingestion: Reads CSV files and writes them to Parquet.
+   2. Data Cleaning and Transformation: Deduplicates and cleans data.
+   3. Data Enrichment: Joins dataframes and enriches the data.
+   4. Reporting and Analytics: Creates dashboard aggregates and team performance reports.
+   5. Optimization: Writes data using Snappy compression and partitions data for efficient reads.
+   6. Real-time Updates: Sets up Spark streaming for near real-time updates.
     
 ## Table of Contents
 
@@ -43,19 +56,6 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 - Databricks workspace
 - Azure Data Lake Storage (ADLS)
 - Databricks cluster with Spark
-
-## Usage
-   Run main script 
-   ```python
-      python main.py
-   ```
-## Functions 
-   Data Ingestion: Reads CSV files and writes them to Parquet.
-   Data Cleaning and Transformation: Deduplicates and cleans data.
-   Data Enrichment: Joins dataframes and enriches the data.
-   Reporting and Analytics: Creates dashboard aggregates and team performance reports.
-   Optimization: Writes data using Snappy compression and partitions data for efficient reads.
-   Real-time Updates: Sets up Spark streaming for near real-time updates.
       
 ### Installation
 
