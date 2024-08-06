@@ -117,7 +117,7 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 ## Data Cleaning and Transformation
 
 1. **Remove Duplicates**:
-     # Assuming we have a interaction id for each call or chat that's initited by customer. 
+   *Assuming we have a interaction id for each call or chat that's initited by customer.*
     ```python
     interactions_df_dedup = interactions_df.dropDuplicates(['interaction_id'])
     agents_df_dedup = agents_df.dropDuplicates(['agent_id'])
