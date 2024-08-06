@@ -1,5 +1,3 @@
-# Define the content of the README file
-readme_content = """
 # Contact Center Analytics with Apache Spark on Databricks
 
 This project is designed to process and analyze contact center data using Apache Spark on Databricks. The goal is to ingest, clean, transform, and analyze data to provide valuable insights for both agents and supervisors.
