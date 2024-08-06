@@ -66,6 +66,8 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     interactions_partitioned_path = optimized_base_path + "interactions_enriched_partitioned.parquet"
     agents_partitioned_path = optimized_base_path + "agents_cleaned_partitioned.parquet"
     supervisors_partitioned_path = optimized_base_path + "supervisors_cleaned_partitioned.parquet"
+
+    detailed_reports_df_parquet_path = optimized_base_path + "detailed_reports_df.parquet"
     ```
 
 4. **Define Schemas for the Files**:
@@ -228,7 +230,7 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     )
 
     detailed_reports_df = team_performance_df.join(supervisors_df_cleaned, on='team', how='left')
-    detailed_reports_df.show()
+    detailed_reports_df.write.parquet(detailed_reports_df_parquet_path, mode='overwrite')
     ```
 
 ## Optimization
