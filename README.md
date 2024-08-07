@@ -4,12 +4,13 @@ This project is designed to process and analyze contact center data using Apache
 
 ## Project Structure
 
-- **main.py**: Main script to run the data processing and analytics pipeline.
+- **dataingestion.py**: Main script to run the data processing and analytics pipeline.
 - **utils.py**: Utility functions for reading and writing data.
 - **schema.py**: Schema definitions for the data.
 - **constant.py**: Constants used in the project.
+- **reporting.py**: reporting pipeline to fetch data and populate dashboard
 
-`main.py` is a Python script designed to process and analyze contact center data using Apache Spark. The script performs data ingestion, cleaning, transformation, enrichment, reporting, and real-time updates.
+`dataingestion.py` is a Python script designed to process and analyze contact center data using Apache Spark. The script performs data ingestion, cleaning, transformation, enrichment, reporting, and real-time updates.
 
 ## Prerequisites
 
@@ -27,7 +28,7 @@ To run the code, follow these steps:
 3. Run the following command to execute the main script:
     ```python dataingestion.py```
 
-This will start the data ingestion process.
+    This will start the data ingestion process.
 
 ## Overview
 
@@ -82,7 +83,7 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     import logging
     from pyspark.sql import SparkSession
     import pyspark.sql.functions as F
-    from utils import read_csv_with_schema, write_delta_with_mode, read_delta, write_delta_with_compression, write_partitioned_delta
+    from utils import read_csv_with_schema, write_delta_with_mode, read_delta, write_delta_as_table, write_partitioned_delta
     from schema import interactions_schema, agents_schema, supervisors_schema
     from constant import *
     ```
@@ -246,14 +247,7 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 
 ## Optimization
 
-1. **Use Snappy Compression for Storage and Read Efficiency**:
-    ```python
-    if interactions_enriched_df:
-        write_delta_with_compression(interactions_enriched_df, interactions_enriched_path)
-    if agents_df_cleaned:
-        write_delta_with_compression(agents_df_cleaned, agents_cleaned_path)
-    if supervisors_df_cleaned:
-        write_delta_with_compression(supervisors_df_cleaned, supervisors_cleaned_path)
+1. **Use Delta file format which uses Snappy Compression for Storage and Read Efficiency**
     ```
 
 2. **Data Partitioning for Efficient Read by Team and Agent ID**:
@@ -302,4 +296,4 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
     3. Resource Utilization: CPU and memory usage (percentage or MB).
   
 ## Improvements:
-    1. Segregate the code into multiple files to have constants, schema, util functions like read, write and pipeline code. this will help in scaling the pipeline with new datasets and also maintenable.
+    1. Segregate the code into multiple files to have constants, schema, util functions like read, write and pipeline code. this will help in scaling the pipeline with new datasets and also maintainable.
