@@ -6,7 +6,6 @@ import pyspark.sql.functions as F
 from utils import (read_csv_with_schema, \
                     write_delta_with_mode, \
                     read_delta, \
-                    write_delta_as_table, \
                     write_partitioned_delta)
 from schema import interactions_schema, agents_schema, supervisors_schema
 from constant import *
@@ -25,10 +24,7 @@ def main():
     It reads CSV files with specified schemas, writes Delta files, deduplicates data, fills 
     missing values, enriches data by joining DataFrames, calculates interaction duration, 
     resolution status, creates dashboard aggregates, caches data, calculates team performance, 
-    generates detailed reports, writes partitioned Delta files, uses Snappy compression for 
-    storage efficiency, and defines a Spark streaming query for streaming updates.
-    It includes a function get_dashboard_data to retrieve the latest dashboard data and 
-    simulates near real-time updates every 10 seconds.
+    generates detailed reports, writes partitioned Delta files for storage efficiency. 
     """
     # Data Ingestion
     interactions_df = read_csv_with_schema(spark, interactions_path, interactions_schema)
@@ -107,13 +103,8 @@ def main():
     # Optimization
     # Data partition for efficient read by team and agent_id
     if interactions_enriched_df:
-        write_delta_with_mode(interactions_enriched_df, interactions_partitioned_path, "team")
+        write_partitioned_delta(interactions_enriched_df, interactions_partitioned_path, "team")
     if agents_df_cleaned:
         write_partitioned_delta(agents_df_cleaned, agents_partitioned_path, "team")
     if supervisors_df_cleaned:
-        write_delta_with_mode(supervisors_df_cleaned, supervisors_partitioned_path, "team")
-        
-    interactions = read_delta(interactions_partitioned_path)
-    write_delta_as_table(interactions, "interactions")
-    supervisors = read_delta(supervisors_partitioned_path)
-    write_delta_as_table(supervisors, "supervisors")
+        write_partitioned_delta(supervisors_df_cleaned, supervisors_partitioned_path, "team")
