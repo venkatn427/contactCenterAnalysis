@@ -3,7 +3,11 @@
 import logging
 from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
-from utils import read_csv_with_schema, write_delta_with_mode, read_delta, write_delta_with_compression, write_partitioned_delta
+from utils import (read_csv_with_schema, \
+                    write_delta_with_mode, \
+                    read_delta, \
+                    write_delta_as_table, \
+                    write_partitioned_delta)
 from schema import interactions_schema, agents_schema, supervisors_schema
 from constant import *
 # Setup logging
@@ -73,7 +77,7 @@ def main():
     dashboard_aggregates_df = interactions_enriched_df.groupBy("agent_id").agg(
         F.count("interaction_id").alias("num_interactions"),
         F.avg("interaction_duration").alias("avg_interaction_duration"),
-        sum(F.when(interactions_enriched_df.resolution_status == 'Resolved', 1).otherwise(0)).alias("resolved_interactions"),
+        F.sum(F.when(interactions_enriched_df.resolution_status == 'Resolved', 1).otherwise(0)).alias("resolved_interactions"),
         F.count("interaction_id").alias("total_interactions")
     )
 
@@ -84,67 +88,32 @@ def main():
 
     dashboard_aggregates_df.cache()
 
-    team_performance_df = interactions_enriched_df.groupBy("team").agg(
-        F.count("interaction_id").alias("num_interactions"),
-        F.avg("interaction_duration").alias("avg_interaction_duration"),
-        sum(F.when(F.col("resolution_status") == 'Resolved', 1).otherwise(0)).alias("resolved_interactions"),
-        F.count("interaction_id").alias("total_interactions")
-    )
+    # team_performance_df = interactions_enriched_df.groupBy("team").agg(
+    #     F.count("interaction_id").alias("num_interactions"),
+    #     F.avg("interaction_duration").alias("avg_interaction_duration"),
+    #     F.sum(F.when(F.col("resolution_status") == 'Resolved', 1).otherwise(0)).alias("resolved_interactions"),
+    #     F.count("interaction_id").alias("total_interactions")
+    # )
 
-    team_performance_df = team_performance_df.withColumn(
-        "resolution_rate", 
-        team_performance_df.resolved_interactions / team_performance_df.total_interactions
-    )
+    # team_performance_df = team_performance_df.withColumn(
+    #     "resolution_rate", 
+    #     team_performance_df.resolved_interactions / team_performance_df.total_interactions
+    # )
 
-    detailed_reports_df = team_performance_df.join(F.broadcast(supervisors_df_cleaned), on='team', how='left')
+    # detailed_reports_df = team_performance_df.join(F.broadcast(supervisors_df_cleaned), on='team', how='left')
 
-    write_partitioned_delta(detailed_reports_df, detailed_reports_df_delta_path, "team")
+    write_partitioned_delta(dashboard_aggregates_df, dashboard_aggregates_df_delta_path, "team")
 
     # Optimization
-    # Use Snappy compression for storage and read efficiency
-    if interactions_enriched_df:
-        write_delta_with_compression(interactions_enriched_df, interactions_enriched_path)
-    if agents_df_cleaned:
-        write_delta_with_compression(agents_df_cleaned, agents_cleaned_path)
-    if supervisors_df_cleaned:
-        write_delta_with_compression(supervisors_df_cleaned, supervisors_cleaned_path)
-
-
     # Data partition for efficient read by team and agent_id
     if interactions_enriched_df:
-        write_partitioned_delta(interactions_enriched_df, interactions_partitioned_path, "team")
+        write_delta_with_mode(interactions_enriched_df, interactions_partitioned_path, "team")
     if agents_df_cleaned:
         write_partitioned_delta(agents_df_cleaned, agents_partitioned_path, "team")
     if supervisors_df_cleaned:
-        write_partitioned_delta(supervisors_df_cleaned, supervisors_partitioned_path, "team")
-
-    # Spark streaming for near real-time updates in dashboard refreshing every 10 sec
-
-    # Define the query for streaming updates
-    query = dashboard_aggregates_df.writeStream \
-        .format("memory") \
-        .queryName("agent_dashboard") \
-        .outputMode("complete") \
-        .start()
-
-    # Function to get the latest dashboard data
-    def get_dashboard_data():
-        """
-        Retrieves the latest dashboard data from the agent_dashboard memory table.
-
-        Returns:
-            DataFrame: The latest dashboard data.
-        """
-        # Retrieve data from the agent_dashboard memory table
-        return spark.sql("""
-            SELECT *
-            FROM agent_dashboard
-        """)
-
-    # Simulate near real-time updates (every 10 seconds)
-    import time
-
-    while True:
-        dashboard_data = get_dashboard_data()
-        dashboard_data.show()
-        time.sleep(10)
+        write_delta_with_mode(supervisors_df_cleaned, supervisors_partitioned_path, "team")
+        
+    interactions = read_delta(interactions_partitioned_path)
+    write_delta_as_table(interactions, "interactions")
+    supervisors = read_delta(supervisors_partitioned_path)
+    write_delta_as_table(supervisors, "supervisors")

@@ -9,15 +9,12 @@ interactions_delta_path = base_path + "interactions.parquet"
 agents_delta_path = base_path + "agents.parquet"
 supervisors_delta_path = base_path + "supervisors.parquet"
 
-# Define paths for optimized Parquet files
+# Define paths for optimized files
 optimized_base_path = base_path + "optimized_data/"
-interactions_enriched_path = optimized_base_path + "interactions_enriched.parquet"
-agents_cleaned_path = optimized_base_path + "agents_cleaned.parquet"
-supervisors_cleaned_path = optimized_base_path + "supervisors_cleaned.parquet"
 
 # Define paths for partitioned Parquet files
 interactions_partitioned_path = optimized_base_path + "interactions_enriched_partitioned.parquet"
 agents_partitioned_path = optimized_base_path + "agents_cleaned_partitioned.parquet"
 supervisors_partitioned_path = optimized_base_path + "supervisors_cleaned_partitioned.parquet"
 
-detailed_reports_df_delta_path = optimized_base_path + "detailed_reports_df.parquet"
+dashboard_aggregates_df_delta_path = optimized_base_path + "dashboard_aggregates_df_delta_path"

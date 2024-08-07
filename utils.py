@@ -71,30 +71,6 @@ def read_delta(spark: SparkSession, path: str) -> DataFrame:
         return None
 
 
-
-def write_delta_with_compression(df: DataFrame, path: str, compression: str = "snappy") -> None:
-    """
-    Write DataFrame to Delta format with compression.
-
-    Args:
-        df (DataFrame): DataFrame to write to Delta.
-        path (str): Path to write the Delta table.
-        compression (str, optional): Compression codec to use. Defaults to "snappy".
-
-    Returns:
-        None
-
-    Raises:
-        Exception: If an error occurs while writing the Delta table.
-    """
-    try:
-        df.write.format("delta").option("compression", compression).mode("overwrite").save(path)
-        logger.info(f"Successfully wrote Delta table with compression to {path}")
-    except Exception as e:
-        logger.error(f"Error writing Delta table {path}: {e}")
-
-
-
 def write_partitioned_delta(df: DataFrame, path: str, partition_cols: list) -> None:
     """
     Write partitioned DataFrame to Delta format.
@@ -115,3 +91,25 @@ def write_partitioned_delta(df: DataFrame, path: str, partition_cols: list) -> N
         logger.info(f"Successfully wrote partitioned Delta table to {path}")
     except Exception as e:
         logger.error(f"Error writing partitioned Delta table {path}: {e}")
+
+def write_delta_as_table(df: DataFrame, table_name: str) -> None:
+    """
+    Write DataFrame to a Delta table with overwrite mode.
+
+    Args:
+        df (DataFrame): DataFrame to write to Delta.
+        table_name (str): Name of the Delta table to create.
+
+    Returns:
+        None
+
+    Raises:
+        Exception: If an error occurs while writing the Delta table.
+    """
+    try:
+        # Write DataFrame to Delta table with overwrite mode
+        df.write.format("delta").mode("overwrite").saveAsTable(table_name)
+        logger.info(f"Successfully wrote Delta table as {table_name}")
+    except Exception as e:
+        logger.error(f"Error writing Delta table {table_name}: {e}")
+        raise  # Re-raise the exception after logging it
