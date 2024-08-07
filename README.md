@@ -78,14 +78,14 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 3. **Mount ADLS to Databricks**:
    - Follow the Databricks documentation to mount your ADLS to the Databricks filesystem.
 
-    **Initialization 
+    ##Initialization 
     ```python
-        import logging
-        from pyspark.sql import SparkSession
-        import pyspark.sql.functions as F
-        from utils import read_csv_with_schema, write_delta_with_mode, read_delta, write_delta_as_table, write_partitioned_delta
-        from schema import interactions_schema, agents_schema, supervisors_schema
-        from constant import *
+    import logging
+    from pyspark.sql import SparkSession
+    import pyspark.sql.functions as F
+    from utils import read_csv_with_schema, write_delta_with_mode, read_delta, write_delta_as_table, write_partitioned_delta
+    from schema import interactions_schema, agents_schema, supervisors_schema
+    from constant import *
     ```
 
     1. logging: For logging messages.
