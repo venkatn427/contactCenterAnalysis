@@ -18,6 +18,17 @@ This project is designed to process and analyze contact center data using Apache
 - Delta Lake
 - Python 3.x
 
+## Usage
+
+To run the code, follow these steps:
+
+1. Open a terminal or command prompt.
+2. Navigate to the project directory.
+3. Run the following command to execute the main script:
+    ```python python dataingestion.py```
+
+This will start the data ingestion process.
+
 ## Overview
 
 The script executes the following tasks:
@@ -64,6 +75,7 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 3. **Mount ADLS to Databricks**:
    - Follow the Databricks documentation to mount your ADLS to the Databricks filesystem.
 
+##Usage 
 
     **Import Libraries**
     ```python 

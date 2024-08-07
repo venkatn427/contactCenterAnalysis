@@ -1,0 +1,3 @@
+pyspark==3.3.0
+delta-lake==1.0.0
+sparknlp==4.5.0
