@@ -30,6 +30,8 @@ To run the code, follow these steps:
 
     This will start the data ingestion process.
 
+In Databricks Environment, clone the code into DBFS local path and execute above steps to ingest data and run ```reporting.py``` for reportin pipeline.
+
 ## Overview
 
 The script executes the following tasks:
