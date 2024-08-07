@@ -25,7 +25,7 @@ To run the code, follow these steps:
 1. Open a terminal or command prompt.
 2. Navigate to the project directory.
 3. Run the following command to execute the main script:
-    ```python python dataingestion.py```
+    ```python dataingestion.py```
 
 This will start the data ingestion process.
 
