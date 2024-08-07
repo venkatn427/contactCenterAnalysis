@@ -247,7 +247,6 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 ## Optimization
 
 1. **Use Delta file format which uses Snappy Compression for Storage and Read Efficiency**
-    ```
 
 2. **Data Partitioning for Efficient Read by Team and Agent ID**:
     ```python
