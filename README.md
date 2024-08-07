@@ -78,7 +78,7 @@ The project processes data from CSV files stored in Azure Data Lake Storage (ADL
 3. **Mount ADLS to Databricks**:
    - Follow the Databricks documentation to mount your ADLS to the Databricks filesystem.
 
-##Initialization 
+## Initialization 
 
     **Import Libraries**
     ```python 
